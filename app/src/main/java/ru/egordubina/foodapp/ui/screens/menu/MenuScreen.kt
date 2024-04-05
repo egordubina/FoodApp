@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.egordubina.foodapp.R
@@ -82,14 +85,9 @@ fun MenuScreen(
     onCategoryClick: (String) -> Unit,
 ) {
     val scrollAppBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var showSelectCityMenu by remember { mutableStateOf(false) }
-    var selectedCity by rememberSaveable { mutableStateOf("Москва") }
     var selectedCategory by rememberSaveable { mutableIntStateOf(-1) }
     val scope = rememberCoroutineScope()
-    val categoriesScrollState = rememberLazyListState()
     val foodScrollState = rememberLazyListState()
-    val foodScrollPosition by remember { derivedStateOf { foodScrollState.firstVisibleItemIndex } }
-    val promoPagerState = rememberPagerState { uiState.promoList.size }
     LaunchedEffect(selectedCategory) {
         scope.launch {
             onCategoryClick(
@@ -100,117 +98,18 @@ fun MenuScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            Column {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,
-                        scrolledContainerColor = Color.White
-                    ),
-                    scrollBehavior = scrollAppBarBehavior,
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .clickable { showSelectCityMenu = !showSelectCityMenu }
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Text(text = selectedCity)
-                            AnimatedContent(targetState = showSelectCityMenu, label = "") {
-                                if (it)
-                                    Icon(
-                                        imageVector = Icons.Rounded.KeyboardArrowUp,
-                                        contentDescription = null
-                                    )
-                                else
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.keyboard_arrow_down),
-                                        contentDescription = null
-                                    )
-                            }
-                        }
-                        DropdownMenu(
-                            expanded = showSelectCityMenu,
-                            onDismissRequest = { showSelectCityMenu = false }
-                        ) {
-                            uiState.allCities.forEach {
-                                DropdownMenuItem(
-                                    text = { Text(text = it) },
-                                    onClick = {
-                                        showSelectCityMenu = false
-                                        selectedCity = it
-                                    }
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { }) {
-                            Image(
-                                painter = painterResource(id = R.drawable.scan_qr),
-                                contentDescription = stringResource(id = R.string.scan_qr)
-                            )
-                        }
-                    }
-                )
-                if (uiState.isLoading)
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                AnimatedVisibility(visible = foodScrollPosition == 0 && uiState.promoList.isNotEmpty()) {
-                    Surface(color = Color.White) {
-                        HorizontalPager(
-                            state = promoPagerState,
-                            modifier = Modifier.height(112.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(uiState.promoList[it])
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-                Surface(color = Color.White) {
-                    LazyRow(
-                        state = categoriesScrollState,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(16.dp),
-                    ) {
-                        items(uiState.categoriesList, key = { it.categoryName }) {
-                            CategoryItem(
-                                category = it,
-                                isSelected = it.id == selectedCategory,
-                                onClick = { id ->
-                                    selectedCategory = id
-                                    if (uiState.foodList.isNotEmpty())
-                                        scope.launch {
-                                            delay(1000)
-                                            categoriesScrollState.animateScrollToItem(0)
-                                        }
-                                },
-                                onClearCategoryClick = {
-                                    selectedCategory = -1
-                                    if (uiState.foodList.isNotEmpty())
-                                        scope.launch {
-                                            delay(1000)
-                                            categoriesScrollState.animateScrollToItem(0)
-                                            foodScrollState.animateScrollToItem(0)
-                                        }
-                                },
-                                modifier = Modifier.animateItemPlacement(animationSpec = tween(600))
-                            )
-                        }
-                    }
-                }
-            }
+            TopBar(
+                isLoading = uiState.isLoading,
+                selectedCategory = selectedCategory,
+                promoList = uiState.promoList,
+                allCities = uiState.allCities,
+                foodList = uiState.foodList,
+                categoriesList = uiState.categoriesList,
+                scope = scope,
+                foodScrollState = foodScrollState,
+                scrollAppBarBehavior = scrollAppBarBehavior,
+                onSelectCategory = { selectedCategory = it }
+            )
         },
         modifier = Modifier.nestedScroll(scrollAppBarBehavior.nestedScrollConnection)
     ) {
@@ -319,6 +218,138 @@ private fun FoodItem(foodItem: MealUi, modifier: Modifier = Modifier) {
                     modifier = Modifier.align(Alignment.End),
                 ) {
                     Text(text = foodItem.minPrice, fontSize = 13.sp, lineHeight = 16.sp)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun TopBar(
+    isLoading: Boolean,
+    selectedCategory: Int,
+    promoList: List<String>,
+    allCities: List<String>,
+    foodList: List<MealUi>,
+    categoriesList: List<CategoryUi>,
+    scope: CoroutineScope,
+    foodScrollState: LazyListState,
+    scrollAppBarBehavior: TopAppBarScrollBehavior,
+    onSelectCategory: (Int) -> Unit,
+) {
+    var showSelectCityMenu by remember { mutableStateOf(false) }
+    var selectedCity by rememberSaveable { mutableStateOf("Москва") }
+    val categoriesScrollState = rememberLazyListState()
+    val foodScrollPosition by remember { derivedStateOf { foodScrollState.firstVisibleItemIndex } }
+    val promoPagerState = rememberPagerState { promoList.size }
+    Column {
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.White,
+                scrolledContainerColor = Color.White
+            ),
+            scrollBehavior = scrollAppBarBehavior,
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { showSelectCityMenu = !showSelectCityMenu }
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(text = selectedCity)
+                    AnimatedContent(targetState = showSelectCityMenu, label = "") {
+                        if (it)
+                            Icon(
+                                imageVector = Icons.Rounded.KeyboardArrowUp,
+                                contentDescription = null
+                            )
+                        else
+                            Icon(
+                                painter = painterResource(id = R.drawable.keyboard_arrow_down),
+                                contentDescription = null
+                            )
+                    }
+                }
+                DropdownMenu(
+                    expanded = showSelectCityMenu,
+                    onDismissRequest = { showSelectCityMenu = false }
+                ) {
+                    allCities.forEach {
+                        DropdownMenuItem(
+                            text = { Text(text = it) },
+                            onClick = {
+                                showSelectCityMenu = false
+                                selectedCity = it
+                            }
+                        )
+                    }
+                }
+            },
+            actions = {
+                IconButton(onClick = { }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.scan_qr),
+                        contentDescription = stringResource(id = R.string.scan_qr)
+                    )
+                }
+            }
+        )
+        if (isLoading)
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        AnimatedVisibility(visible = foodScrollPosition == 0 && promoList.isNotEmpty()) {
+            Surface(color = Color.White) {
+                HorizontalPager(
+                    state = promoPagerState,
+                    modifier = Modifier.height(112.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(promoList[it])
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .fillMaxWidth()
+                    )
+                }
+            }
+        }
+        Surface(color = Color.White) {
+            LazyRow(
+                state = categoriesScrollState,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(16.dp),
+            ) {
+                items(categoriesList, key = { it.categoryName }) {
+                    CategoryItem(
+                        category = it,
+                        isSelected = it.id == selectedCategory,
+                        onClick = { id ->
+                            onSelectCategory(id)
+                            if (foodList.isNotEmpty())
+                                scope.launch {
+                                    delay(1000)
+                                    categoriesScrollState.animateScrollToItem(0)
+                                }
+                        },
+                        onClearCategoryClick = {
+                            onSelectCategory(-1)
+                            if (foodList.isNotEmpty())
+                                scope.launch {
+                                    delay(1000)
+                                    categoriesScrollState.animateScrollToItem(0)
+                                    foodScrollState.animateScrollToItem(0)
+                                }
+                        },
+                        modifier = Modifier.animateItemPlacement(animationSpec = tween(600))
+                    )
                 }
             }
         }
