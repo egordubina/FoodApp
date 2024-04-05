@@ -99,7 +99,7 @@ fun Meal.getIngredients(): List<String> = listOf(
     this.ingredient18,
     this.ingredient19,
     this.ingredient20,
-)
+).filter { it.isNotEmpty() }
 
 /**
  * Возвращает строку, приведённую к формату стоиости с валютным знаком

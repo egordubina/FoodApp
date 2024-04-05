@@ -4,5 +4,5 @@ import kotlinx.coroutines.flow.Flow
 import ru.egordubina.foodapp.domain.models.Meal
 
 interface MealsRepository {
-    val meals: Flow<List<Meal>>
+    suspend fun loadAllmeals(): List<Meal>
 }

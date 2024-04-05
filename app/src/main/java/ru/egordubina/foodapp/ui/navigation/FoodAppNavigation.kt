@@ -25,7 +25,11 @@ fun FoodAppNavigation(
         composable(FoodDestination.MENU.name) {
             val vm: MenuViewModel = hiltViewModel()
             val uiState = vm.uiState.collectAsState()
-            MenuScreen(uiState = uiState.value)
+            MenuScreen(
+                uiState = uiState.value,
+                onFoodItemClick = {},
+                onCategoryClick = { vm.loadMealsByCategory(it) },
+            )
         }
     }
 }
