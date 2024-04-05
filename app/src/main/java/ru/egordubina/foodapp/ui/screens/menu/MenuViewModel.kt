@@ -44,7 +44,12 @@ class MenuViewModel @Inject constructor(
                 it.copy(
                     categoriesList = categories.await(),
                     foodList = meals.await().map { it.asUi(it.getIngredients()) },
-                    isLoading = false
+                    isLoading = false,
+                    promoList = listOf(
+                        "https://globalsib.com/wp-content/uploads/2016/12/reklam.jpg",
+                        "https://www.zastavki.com/pictures/originals/2018Food_Boiled_potatoes_with_meat_and_salad_on_a_plate_122563_.jpg",
+                        "https://catherineasquithgallery.com/uploads/posts/2021-03/1614548209_17-p-pitstsa-na-belom-fone-30.png"
+                    )
                 )
             }
         }

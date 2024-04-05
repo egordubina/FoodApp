@@ -16,14 +16,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Clear
@@ -39,7 +41,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,6 +48,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,23 +62,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import ru.egordubina.foodapp.R
 import ru.egordubina.foodapp.ui.models.CategoryUi
 import ru.egordubina.foodapp.ui.models.MealUi
-import ru.egordubina.foodapp.ui.theme.FoodAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -91,6 +91,9 @@ fun MenuScreen(
     var selectedCategory by rememberSaveable { mutableIntStateOf(-1) }
     val scope = rememberCoroutineScope()
     val categoriesScrollState = rememberLazyListState()
+    val foodScrollState = rememberLazyListState()
+    val foodScrollPosition by remember { derivedStateOf { foodScrollState.firstVisibleItemIndex } }
+    val promoPagerState = rememberPagerState { uiState.promoList.size }
     LaunchedEffect(key1 = selectedCategory) {
         scope.launch {
             onCategoryClick(
@@ -150,6 +153,30 @@ fun MenuScreen(
                         }
                     }
                 )
+                AnimatedVisibility(visible = foodScrollPosition == 0) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        HorizontalPager(
+                            state = promoPagerState,
+                            modifier = Modifier.height(112.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(uiState.promoList[it])
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .fillMaxWidth()
+                            )
+                        }
+                    }
+                }
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                 ) {
@@ -187,16 +214,21 @@ fun MenuScreen(
     ) { innerPadding ->
         // todo: change to dimensions
         LazyColumn(
+            state = foodScrollState,
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(32.dp),
             modifier = Modifier.consumeWindowInsets(innerPadding)
         ) {
             items(uiState.foodList, key = { it.id }) {
                 FoodItem(
-                    it,
+                    foodItem = it,
                     modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onFoodItemClick(it.id) }
                         .padding(horizontal = 16.dp)
-                        .animateItemPlacement(animationSpec = tween(600))
+                        .animateItemPlacement(
+                            animationSpec = tween(600)
+                        )
                 )
             }
             item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
