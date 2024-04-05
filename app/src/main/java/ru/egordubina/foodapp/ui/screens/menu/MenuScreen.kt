@@ -113,7 +113,6 @@ fun MenuScreen(
         },
         modifier = Modifier.nestedScroll(scrollAppBarBehavior.nestedScrollConnection)
     ) {
-        // todo: change to dimensions
         LazyColumn(
             state = foodScrollState,
             contentPadding = it,
