@@ -10,7 +10,6 @@ enum class FoodDestination(
     @StringRes val label: Int?,
 ) {
     MENU(title = null, icon = R.drawable.menu, label = R.string.menu),
-    DETAIL(title = null, icon = null, label = null),
     PROFILE(title = null, icon = R.drawable.profile, label = R.string.profile),
     CART(title = null, icon = R.drawable.cart, label = R.string.cart)
 }
