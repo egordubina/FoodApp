@@ -14,7 +14,7 @@ class MealsRepositoryImpl @Inject constructor(
     private val mealDao: MealDao,
     private val mealApi: MealApi,
 ) : MealsRepository {
-    override suspend fun loadAllmeals(): List<Meal> {
+    override suspend fun loadAllMeals(): List<Meal> {
         val response = mealApi.loadAllMeals().map { it.asDomain() }
         if (response.isNotEmpty())
             response.forEach { mealDao.insert(it.asDbo()) }

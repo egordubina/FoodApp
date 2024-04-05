@@ -7,5 +7,5 @@ import javax.inject.Inject
 class LoadMealsUseCase @Inject constructor(
     private val mealsRepository: MealsRepository
 ) {
-    suspend fun loadAll(): List<Meal> = mealsRepository.loadAllmeals()
+    suspend fun loadAll(): List<Meal> = mealsRepository.loadAllMeals()
 }

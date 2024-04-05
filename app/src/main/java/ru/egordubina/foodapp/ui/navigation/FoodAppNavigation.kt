@@ -24,8 +24,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import ru.egordubina.foodapp.ui.screens.cart.CartScreen
 import ru.egordubina.foodapp.ui.screens.menu.MenuScreen
 import ru.egordubina.foodapp.ui.screens.menu.MenuViewModel
+import ru.egordubina.foodapp.ui.screens.profile.Profile
 
 @Composable
 fun FoodAppNavigation(navController: NavHostController) {
@@ -58,10 +60,10 @@ fun FoodAppNavigation(navController: NavHostController) {
                 )
             }
             composable(FoodDestination.PROFILE.name) {
-
+                Profile()
             }
             composable(FoodDestination.CART.name) {
-
+                CartScreen()
             }
         }
     }

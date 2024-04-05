@@ -6,8 +6,6 @@ import ru.egordubina.foodapp.ui.models.MealUi
 data class MenuUiState(
     val isLoading: Boolean = true,
     val isError: Boolean = false,
-    val selectedCategoryId: Int = -1,
-    val selectedCity: String = "Москва",
     val allCities: List<String> = listOf("Москва", "Санкт-Петербург"),
     val categoriesList: List<CategoryUi> = emptyList(),
     val foodList: List<MealUi> = emptyList(),

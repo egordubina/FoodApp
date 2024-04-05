@@ -9,7 +9,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.egordubina.foodapp.domain.usecases.LoadCategoriesUseCase
@@ -18,7 +17,6 @@ import ru.egordubina.foodapp.ui.models.CategoryUi
 import ru.egordubina.foodapp.ui.models.MealUi
 import ru.egordubina.foodapp.ui.models.asUi
 import ru.egordubina.foodapp.ui.models.getIngredients
-import java.util.Locale.filter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,7 +26,7 @@ class MenuViewModel @Inject constructor(
 ) : ViewModel() {
     private var _uiState: MutableStateFlow<MenuUiState> = MutableStateFlow(MenuUiState())
     private var _allMeals: MutableStateFlow<List<MealUi>> = MutableStateFlow(emptyList())
-    private var _allCategores: MutableStateFlow<List<CategoryUi>> = MutableStateFlow(emptyList())
+    private var _allCategories: MutableStateFlow<List<CategoryUi>> = MutableStateFlow(emptyList())
     val uiState: StateFlow<MenuUiState> = _uiState.asStateFlow()
     private var job: Job? = null
 
@@ -39,16 +37,15 @@ class MenuViewModel @Inject constructor(
             val categories = async { loadCategoriesUseCase.loadAll() }
             val meals = async { loadMealsUseCase.loadAll() }
             _allMeals.update { meals.await().map { it.asUi(it.getIngredients()) } }
-            _allCategores.update { categories.await() }
-            _uiState.update {
-                it.copy(
+            _allCategories.update { categories.await() }
+            _uiState.update { state ->
+                state.copy(
                     categoriesList = categories.await(),
                     foodList = meals.await().map { it.asUi(it.getIngredients()) },
                     isLoading = false,
                     promoList = listOf(
                         "https://globalsib.com/wp-content/uploads/2016/12/reklam.jpg",
-                        "https://www.zastavki.com/pictures/originals/2018Food_Boiled_potatoes_with_meat_and_salad_on_a_plate_122563_.jpg",
-                        "https://catherineasquithgallery.com/uploads/posts/2021-03/1614548209_17-p-pitstsa-na-belom-fone-30.png"
+                        "https://www.zastavki.com/pictures/originals/2018Food_Boiled_potatoes_with_meat_and_salad_on_a_plate_122563_.jpg"
                     )
                 )
             }
@@ -56,18 +53,23 @@ class MenuViewModel @Inject constructor(
     }
 
     fun loadMealsByCategory(category: String) {
+        _uiState.update { it.copy(isLoading = true) }
         if (category.isEmpty())
-            _uiState.update {
-                it.copy(
+            _uiState.update { state ->
+                state.copy(
                     foodList = _allMeals.value,
-                    categoriesList = _allCategores.value
+                    categoriesList = _allCategories.value,
+                    isLoading = false,
+                    isError = false
                 )
             }
         else
-            _uiState.update {
-                it.copy(
+            _uiState.update { state ->
+                state.copy(
                     foodList = _allMeals.value.filter { it.category == category },
-                    categoriesList = _allCategores.value.sortedByDescending { it.categoryName == category }
+                    categoriesList = _allCategories.value.sortedByDescending { it.categoryName == category },
+                    isLoading = false,
+                    isError = false
                 )
             }
     }

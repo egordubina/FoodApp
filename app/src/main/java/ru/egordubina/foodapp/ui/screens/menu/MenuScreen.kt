@@ -34,6 +34,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -89,7 +90,7 @@ fun MenuScreen(
     val foodScrollState = rememberLazyListState()
     val foodScrollPosition by remember { derivedStateOf { foodScrollState.firstVisibleItemIndex } }
     val promoPagerState = rememberPagerState { uiState.promoList.size }
-    LaunchedEffect(key1 = selectedCategory) {
+    LaunchedEffect(selectedCategory) {
         scope.launch {
             onCategoryClick(
                 uiState.categoriesList.find { it.id == selectedCategory }?.categoryName ?: ""
@@ -153,6 +154,8 @@ fun MenuScreen(
                         }
                     }
                 )
+                if (uiState.isLoading)
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 AnimatedVisibility(visible = foodScrollPosition == 0 && uiState.promoList.isNotEmpty()) {
                     Surface(color = Color.White) {
                         HorizontalPager(
