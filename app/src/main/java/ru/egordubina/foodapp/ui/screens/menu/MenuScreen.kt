@@ -36,6 +36,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +85,7 @@ fun MenuScreen(
     uiState: MenuUiState,
     onFoodItemClick: (Int) -> Unit,
     onCategoryClick: (String) -> Unit,
+    innerPadding: PaddingValues,
 ) {
     val scrollAppBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var showSelectCityMenu by remember { mutableStateOf(false) }
@@ -102,9 +104,14 @@ fun MenuScreen(
         }
     }
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             Column {
                 TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        scrolledContainerColor = Color.White
+                    ),
                     scrollBehavior = scrollAppBarBehavior,
                     title = {
                         Row(
@@ -154,9 +161,7 @@ fun MenuScreen(
                     }
                 )
                 AnimatedVisibility(visible = foodScrollPosition == 0) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.background
-                    ) {
+                    Surface(color = Color.White) {
                         HorizontalPager(
                             state = promoPagerState,
                             modifier = Modifier.height(112.dp),
@@ -177,9 +182,7 @@ fun MenuScreen(
                         }
                     }
                 }
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                ) {
+                Surface(color = Color.White) {
                     LazyRow(
                         state = categoriesScrollState,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -217,7 +220,6 @@ fun MenuScreen(
         LazyColumn(
             state = foodScrollState,
             contentPadding = innerPadding,
-            verticalArrangement = Arrangement.spacedBy(32.dp),
             modifier = Modifier.consumeWindowInsets(innerPadding)
         ) {
             items(uiState.foodList, key = { it.id }) {
@@ -226,11 +228,10 @@ fun MenuScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .clickable { onFoodItemClick(it.id) }
-                        .padding(horizontal = 16.dp)
-                        .animateItemPlacement(
-                            animationSpec = tween(600)
-                        )
+                        .padding(16.dp)
+                        .animateItemPlacement(animationSpec = tween(600))
                 )
+                HorizontalDivider(color = Color(0xFFF3F5F9), thickness = 1.dp)
             }
             item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
         }
@@ -276,6 +277,7 @@ private fun CategoryItem(
 @Composable
 private fun FoodItem(foodItem: MealUi, modifier: Modifier = Modifier) {
     Surface(
+        color = Color.White,
         modifier = modifier
     ) {
         Row(
