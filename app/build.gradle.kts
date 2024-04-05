@@ -73,6 +73,10 @@ dependencies {
     implementation(libs.hilt.navigation)
     ksp(libs.hilt.compiler)
 
+    ksp(libs.room.compiler)
+    annotationProcessor(libs.room.compiler)
+    implementation(libs.room.runtime)
+
     implementation(libs.serialization.json)
     implementation(libs.ktor.client)
     implementation(libs.ktor.cio)

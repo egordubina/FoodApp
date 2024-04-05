@@ -15,6 +15,7 @@ ktor = "2.3.9"
 navigation = "2.7.7"
 hilt-navigation = "1.2.0"
 coil = "2.6.0"
+room = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,8 @@ ktor-client = { group = "io.ktor", name = "ktor-client-core", version.ref = "kto
 ktor-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -201,6 +201,7 @@ fun MenuScreen(
                                     scope.launch {
                                         delay(1000)
                                         categoriesScrollState.animateScrollToItem(0)
+                                        foodScrollState.animateScrollToItem(0)
                                     }
                                 },
                                 modifier = Modifier.animateItemPlacement(animationSpec = tween(600))
