@@ -11,15 +11,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -39,7 +34,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -85,7 +79,6 @@ fun MenuScreen(
     uiState: MenuUiState,
     onFoodItemClick: (Int) -> Unit,
     onCategoryClick: (String) -> Unit,
-    innerPadding: PaddingValues,
 ) {
     val scrollAppBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     var showSelectCityMenu by remember { mutableStateOf(false) }
@@ -160,7 +153,7 @@ fun MenuScreen(
                         }
                     }
                 )
-                AnimatedVisibility(visible = foodScrollPosition == 0) {
+                AnimatedVisibility(visible = foodScrollPosition == 0 && uiState.promoList.isNotEmpty()) {
                     Surface(color = Color.White) {
                         HorizontalPager(
                             state = promoPagerState,
@@ -194,18 +187,20 @@ fun MenuScreen(
                                 isSelected = it.id == selectedCategory,
                                 onClick = { id ->
                                     selectedCategory = id
-                                    scope.launch {
-                                        delay(1000)
-                                        categoriesScrollState.animateScrollToItem(0)
-                                    }
+                                    if (uiState.foodList.isNotEmpty())
+                                        scope.launch {
+                                            delay(1000)
+                                            categoriesScrollState.animateScrollToItem(0)
+                                        }
                                 },
                                 onClearCategoryClick = {
                                     selectedCategory = -1
-                                    scope.launch {
-                                        delay(1000)
-                                        categoriesScrollState.animateScrollToItem(0)
-                                        foodScrollState.animateScrollToItem(0)
-                                    }
+                                    if (uiState.foodList.isNotEmpty())
+                                        scope.launch {
+                                            delay(1000)
+                                            categoriesScrollState.animateScrollToItem(0)
+                                            foodScrollState.animateScrollToItem(0)
+                                        }
                                 },
                                 modifier = Modifier.animateItemPlacement(animationSpec = tween(600))
                             )
@@ -215,12 +210,11 @@ fun MenuScreen(
             }
         },
         modifier = Modifier.nestedScroll(scrollAppBarBehavior.nestedScrollConnection)
-    ) { innerPadding ->
+    ) {
         // todo: change to dimensions
         LazyColumn(
             state = foodScrollState,
-            contentPadding = innerPadding,
-            modifier = Modifier.consumeWindowInsets(innerPadding)
+            contentPadding = it,
         ) {
             items(uiState.foodList, key = { it.id }) {
                 FoodItem(
@@ -233,7 +227,6 @@ fun MenuScreen(
                 )
                 HorizontalDivider(color = Color(0xFFF3F5F9), thickness = 1.dp)
             }
-            item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
         }
     }
 }
@@ -282,6 +275,7 @@ private fun FoodItem(foodItem: MealUi, modifier: Modifier = Modifier) {
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(22.dp),
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             AsyncImage(
@@ -317,9 +311,9 @@ private fun FoodItem(foodItem: MealUi, modifier: Modifier = Modifier) {
                 OutlinedButton(
                     onClick = { },
                     shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.align(Alignment.End),
                     border = BorderStroke(1.dp, Color(0xFFFD3A69)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFD3A69))
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFD3A69)),
+                    modifier = Modifier.align(Alignment.End),
                 ) {
                     Text(text = foodItem.minPrice, fontSize = 13.sp, lineHeight = 16.sp)
                 }

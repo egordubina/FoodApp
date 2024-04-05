@@ -1,8 +1,11 @@
 package ru.egordubina.foodapp.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
@@ -10,11 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,10 +29,24 @@ import ru.egordubina.foodapp.ui.screens.menu.MenuViewModel
 
 @Composable
 fun FoodAppNavigation(navController: NavHostController) {
-    Scaffold(bottomBar = { NavBar(navController = navController) }) { innerPadding ->
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    Scaffold(
+        bottomBar = {
+            AnimatedVisibility(TOP_LEVEL_DESTINATIONS.any { it.name == currentDestination?.route }) {
+                NavBar(
+                    navController = navController,
+                    currentDestination = currentDestination
+                )
+            }
+        }
+    ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = FoodDestination.MENU.name,
+            modifier = Modifier
+                .padding(PaddingValues(bottom = innerPadding.calculateBottomPadding()))
+                .fillMaxSize()
         ) {
             composable(FoodDestination.MENU.name) {
                 val vm: MenuViewModel = hiltViewModel()
@@ -37,7 +55,6 @@ fun FoodAppNavigation(navController: NavHostController) {
                     uiState = uiState.value,
                     onFoodItemClick = {},
                     onCategoryClick = { vm.loadMealsByCategory(it) },
-                    innerPadding = innerPadding,
                 )
             }
             composable(FoodDestination.PROFILE.name) {
@@ -51,12 +68,11 @@ fun FoodAppNavigation(navController: NavHostController) {
 }
 
 @Composable
-private fun NavBar(navController: NavHostController) {
-    NavigationBar(
-        containerColor = Color(0xFFF0F0F0),
-    ) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
+private fun NavBar(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+) {
+    NavigationBar(containerColor = Color(0xFFF0F0F0)) {
         TOP_LEVEL_DESTINATIONS.forEach { dest ->
             NavigationBarItem(
                 icon = {
@@ -66,7 +82,7 @@ private fun NavBar(navController: NavHostController) {
                     )
                 },
                 label = { Text(text = stringResource(id = dest.label!!)) },
-                selected = currentDestination?.hierarchy?.any { it.route == dest.name } == true,
+                selected = currentDestination?.route == dest.name,
                 onClick = {
                     navController.navigate(dest.name) {
                         popUpTo(navController.graph.findStartDestination().id) {
